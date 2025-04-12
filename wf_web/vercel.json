@@ -1,24 +1,17 @@
 {
   "version": 2,
-  "builds": [
+  "regions": ["hkg1"],  // 强制使用香港节点
+  "headers": [
     {
-      "src": "api/submit.js",
-      "use": "@vercel/node"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
+        { "key": "CDN-Cache-Control", "value": "public, s-maxage=3600" }
+      ]
     }
   ],
   "routes": [
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/thank_you.html",
-      "dest": "/thank_you.html"
-    },
-    {
-      "src": "/api/submit",
-      "dest": "/api/submit",
-      "methods": ["POST"]
-    }
+    { "src": "/api/.*", "dest": "/api", "headers": { "Cache-Control": "no-store" } },
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }
