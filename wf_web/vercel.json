@@ -1,17 +1,65 @@
 {
   "version": 2,
-  "regions": ["hkg1"],  // 强制使用香港节点
-  "headers": [
+  "framework": null,  // 显式声明非框架项目
+  "builds": [
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600" },
-        { "key": "CDN-Cache-Control", "value": "public, s-maxage=3600" }
-      ]
+      "src": "*.html",
+      "use": "@vercel/static"  // 静态文件处理
+    },
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node",   // Node.js函数处理
+      "config": { 
+        "includeFiles": ["**/*.json"]  // 包含额外文件
+      }
     }
   ],
   "routes": [
-    { "src": "/api/.*", "dest": "/api", "headers": { "Cache-Control": "no-store" } },
-    { "src": "/.*", "dest": "/index.html" }
+    // API路由（无缓存）
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1",
+      "headers": {
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex"
+      }
+    },
+    // 静态资源路由（长期缓存）
+    {
+      "src": "/(.*\\.(ico|png|jpg|css|js))",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    // 主页面路由（短时缓存）
+    {
+      "src": "/(.*)",
+      "dest": "/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    }
+  ],
+  "regions": ["hkg1"],  // 强制使用香港节点
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,    // 分配1GB内存
+      "maxDuration": 15  // 超时时间15秒
+    }
+  },
+  "headers": [
+    // 全局安全头
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
+  ],
+  "rewrites": [
+    // SPA友好路由
+    { "source": "/survey", "destination": "/index.html" },
+    { "source": "/thank-you", "destination": "/thank_you.html" }
   ]
 }
